@@ -2,22 +2,35 @@ package main
 
 import (
 	"fmt"
-	"math/rand"
+	//"math/rand"
 	"strings"
 )
 
-func main3() {
+type available struct {
+	isFirst  bool
+	isSecond bool
+}
+
+func main2() {
 	//1. Есть текст, надо посчитать сколько раз каждое слова встречается.
 	//wc.Test(wordCount)
 	//2. Есть очень большой массив(слайс) целых чисел, надо сказать какие числа в нем упоминаются хоть по разу.
-	var arr = make([]int, 1000)
-	for i := 0; i < 1000; i++ {
-		arr[i] = rand.Intn(2)
+	var arr = make([]int, 100)
+	for i := 0; i < 100; i++ {
+		//arr[i] = rand.Intn(2)
+		arr[i] = i
 	}
 	//fmt.Println(arr)
-	m := intCount(arr)
-	fmt.Println(m)
-
+	//m := intCount(arr)
+	//fmt.Println(m)
+	//3.Есть два больших массива чисел, надо найти, какие упоминаются в обоих
+	var arr2 = make([]int, 50)
+	for i := 0; i < 50; i++ {
+		//arr2[i] = rand.Intn(1)
+		arr2[i] = i + 5
+	}
+	intMeetInBoth := meetInBoth(arr, arr2)
+	fmt.Println("3) ", intMeetInBoth)
 	//4.Сделать Фибоначчи с мемоизацией
 	res = append(res, 0)
 	res = append(res, 1)
@@ -52,6 +65,27 @@ func intCount(arr []int) map[int]int {
 		}
 	}
 	return m
+}
+
+//3.Есть два больших массива чисел, надо найти, какие упоминаются в обоих
+func meetInBoth(first []int, second []int) []int {
+	var res []int
+	var midNums = make(map[int]available)
+	for _, v := range first {
+		midNums[v] = available{true, false}
+	}
+
+	for _, v := range second {
+		_, okay := midNums[v]
+		if okay != false {
+			if midNums[v].isSecond == false {
+				midNums[v] = available{true, true}
+				res = append(res, v)
+			}
+		}
+	}
+
+	return res
 }
 
 var res []int

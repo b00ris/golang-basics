@@ -5,7 +5,7 @@ import (
 	"sort"
 )
 
-func main2() {
+func main() {
 	// 1. К каждому элементу []int прибавить 1
 	arr := []int{0, 1, 2, 3}
 	addOne(arr)
@@ -111,17 +111,16 @@ func mergeArr(left, right []int) (arr []int) {
 //8. Из первого слайса удалить все числа, которые есть во втором
 func deleteDuplicate(arr []int, arr2 []int) []int {
 	//var resArr = arr
+	sort.Ints(arr2)
+
 	for i, arrV := range arr {
-		for _, v := range arr2 {
-			if arrV == v {
-				if i == 0 {
-					arr = arr[1:]
-				} else if i == len(arr) {
-					arr = arr[:len(arr)-1]
-				} else {
-					arr = append(arr[:i], arr[i+1:]...)
-				}
-				break
+		if binarySearch(arrV, arr2) {
+			if i == 0 {
+				arr = arr[1:]
+			} else if i == len(arr) {
+				arr = arr[:len(arr)-1]
+			} else {
+				arr = append(arr[:i], arr[i+1:]...)
 			}
 		}
 	}
@@ -170,4 +169,25 @@ func alternationValue(arr []int) {
 	for i := 0; i < len(arr)-1; i += 2 {
 		arr[i], arr[i+1] = arr[i+1], arr[i]
 	}
+}
+
+func binarySearch(number int, haystack []int) bool {
+	low := 0
+	high := len(haystack) - 1
+
+	for low <= high {
+		mid := (low + high) / 2
+
+		if haystack[mid] < number {
+			low = mid + 1
+		} else {
+			high = mid - 1
+		}
+	}
+
+	if low == len(haystack) || haystack[low] != number {
+		return false
+	}
+
+	return true
 }

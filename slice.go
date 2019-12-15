@@ -5,7 +5,7 @@ import (
 	"sort"
 )
 
-func main() {
+func main2() {
 	// 1. К каждому элементу []int прибавить 1
 	arr := []int{0, 1, 2, 3}
 	addOne(arr)
@@ -31,24 +31,26 @@ func main() {
 	arr3 := mergeArr(arr, arr2)
 	fmt.Println("7) ", arr3)
 	//8. Из первого слайса удалить все числа, которые есть во втором
-	fmt.Print("8) ", arr, "-", arr2)
-	arr = deleteDuplicate(arr, arr2)
+	arrLeft := []int{11, 12, 2, 14, 1, 3, 10, 5, 1, 0}
+	arrRight := []int{4, 1, 2, 9, 8, 4, 1, 5, 7, 6}
+	fmt.Print("8) ", arrLeft, "-", arrRight)
+	arr = deleteDuplicate(arrLeft, arrRight)
 	fmt.Println(" = ", arr)
 	//9. Сдвинуть все элементы слайса на 1 влево. Нулевой становится последним, первый - нулевым, последний - предпоследним.
 	fmt.Print("9) ", arr3)
-	leftShift(arr3, 1)
+	arr3 = leftShift(arr3, 1)
 	fmt.Println(" -> ", arr3)
 	//10. Тоже, но сдвиг на заданное пользователем i
 	fmt.Print("10) ", arr3)
-	leftShift(arr3, 2)
+	arr3 = leftShift(arr3, 2)
 	fmt.Println(" -> ", arr3)
 	//11. Тоже, что 9, но сдвиг вправо
 	fmt.Print("11) ", arr3)
-	rightShift(arr3, 1)
+	arr3 = rightShift(arr3, 1)
 	fmt.Println(" -> ", arr3)
 	//12. Тоже, что 9, но сдвиг вправо
 	fmt.Print("12) ", arr3)
-	rightShift(arr3, 2)
+	arr3 = rightShift(arr3, 2)
 	fmt.Println(" -> ", arr3)
 	//13. Вернуть пользователю копию переданного слайса
 	newArr := copyArr(arr3)
@@ -77,7 +79,7 @@ func main() {
 //1. К каждому элементу []int прибавить 1
 func addOne(arr []int) {
 	for i := range arr {
-		arr[i] += 1
+		arr[i]++
 	}
 }
 
@@ -98,7 +100,7 @@ func firstPop(arr []int) ([]int, int) {
 //6. Взять i-е число слайса, вернуть его пользователю, а из слайса этот элемент удалить. Число i передает пользователь в функцию
 func popI(arr []int, i int) ([]int, int) {
 	value := arr[i]
-	arr = append(arr[:i], arr[i+1:]...)
+	copy(arr[i:], arr[i+1:])
 	return arr, value
 }
 
@@ -112,49 +114,34 @@ func mergeArr(left, right []int) (arr []int) {
 func deleteDuplicate(arr []int, arr2 []int) []int {
 	//var resArr = arr
 	sort.Ints(arr2)
-
-	for i, arrV := range arr {
-		if binarySearch(arrV, arr2) {
-			if i == 0 {
-				arr = arr[1:]
-			} else if i == len(arr) {
-				arr = arr[:len(arr)-1]
-			} else {
-				arr = append(arr[:i], arr[i+1:]...)
-			}
+	var index = 0
+	for i := 0; i < len(arr); i++ {
+		index = sort.SearchInts(arr2, arr[i])
+		if index < len(arr2) && arr2[index] == arr[i] {
+			arr = append(arr[:i], arr[i+1:]...)
+			i--
 		}
 	}
 	return arr
 }
 
 //9-10. Сдвинуть все элементы слайса на 1 влево. Нулевой становится последним, первый - нулевым, последний - предпоследним.
-func leftShift(arr []int, shift int) {
-	tmp := make([]int, shift)
-	copy(tmp, arr[0:shift])
-	for i := 0; i < len(arr)-shift; i++ {
-		arr[i] = arr[i+shift]
+func leftShift(slice []int, offset int) []int {
+	var result = make([]int, len(slice))
 
-	}
+	splitIndex := offset
+	rightSide := slice[splitIndex:]
+	leftSide := slice[:splitIndex]
 
-	var j = 0
-	for i := len(arr) - shift; i < len(arr); i++ {
-		arr[i] = tmp[j]
-		j++
-	}
+	copy(result, rightSide)
+	copy(result[len(rightSide):], leftSide)
+
+	return result
 }
 
 //11-12. Тоже, что 9, но сдвиг вправо
-func rightShift(arr []int, shift int) {
-	tmp := make([]int, shift)
-	copy(tmp, arr[len(arr)-shift:])
-	for i := len(arr) - 1; i > shift-1; i-- {
-		arr[i] = arr[i-shift]
-	}
-
-	//var j = 0
-	for i := 0; i < shift; i++ {
-		arr[i] = tmp[i]
-	}
+func rightShift(arr []int, offset int) []int {
+	return leftShift(arr, len(arr)-offset)
 }
 
 //13. Вернуть пользователю копию переданного слайса
@@ -169,25 +156,4 @@ func alternationValue(arr []int) {
 	for i := 0; i < len(arr)-1; i += 2 {
 		arr[i], arr[i+1] = arr[i+1], arr[i]
 	}
-}
-
-func binarySearch(number int, haystack []int) bool {
-	low := 0
-	high := len(haystack) - 1
-
-	for low <= high {
-		mid := (low + high) / 2
-
-		if haystack[mid] < number {
-			low = mid + 1
-		} else {
-			high = mid - 1
-		}
-	}
-
-	if low == len(haystack) || haystack[low] != number {
-		return false
-	}
-
-	return true
 }

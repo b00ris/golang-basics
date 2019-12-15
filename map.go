@@ -4,6 +4,7 @@ import (
 	"fmt"
 	//"math/rand"
 	"strings"
+	"unicode"
 )
 
 type available struct {
@@ -11,9 +12,10 @@ type available struct {
 	isSecond bool
 }
 
-func main2() {
+func main() {
 	//1. Есть текст, надо посчитать сколько раз каждое слова встречается.
-	//wc.Test(wordCount)
+	text := "Go (часто также Golang) — компилируемый многопоточный язык программирования, разработанный внутри компании Google. Разработка Go началась в сентябре 2007 года, его непосредственным проектированием занимались Роберт Гризмер, Роб Пайк и Кен Томпсон, занимавшиеся до этого проектом разработки операционной системы Inferno. Официально язык был представлен в ноябре 2009 года."
+	fmt.Println("1) 	", wordCount(text))
 	//2. Есть очень большой массив(слайс) целых чисел, надо сказать какие числа в нем упоминаются хоть по разу.
 	var arr = make([]int, 100)
 	for i := 0; i < 100; i++ {
@@ -32,23 +34,22 @@ func main2() {
 	intMeetInBoth := meetInBoth(arr, arr2)
 	fmt.Println("3) ", intMeetInBoth)
 	//4.Сделать Фибоначчи с мемоизацией
-	res = append(res, 0)
-	res = append(res, 1)
-	print(fib(9))
+	res := []int{0, 1}
+	print(calcFib(5, &res))
+	//	or
+	//print(fib(9))
 
 }
 
 //1. Есть текст, надо посчитать сколько раз каждое слова встречается.
 func wordCount(str string) map[string]int {
 	m := make(map[string]int)
-	arr := strings.Split(str, " ")
+	//strings.
+	arr := strings.FieldsFunc(str, func(c rune) bool {
+		return !unicode.IsLetter(c)
+	})
 	for _, v := range arr {
-		elem, okay := m[v]
-		if okay == false {
-			m[v] = 1
-		} else {
-			m[v] += elem
-		}
+		m[v]++
 	}
 	return m
 }
@@ -57,12 +58,7 @@ func wordCount(str string) map[string]int {
 func intCount(arr []int) map[int]int {
 	m := make(map[int]int)
 	for _, v := range arr {
-		_, okay := m[v]
-		if okay == false {
-			m[v] = 1
-		} else {
-			m[v] += 1
-		}
+		m[v]++
 	}
 	return m
 }
@@ -88,17 +84,20 @@ func meetInBoth(first []int, second []int) []int {
 	return res
 }
 
-var res []int
-
 func fib(n int) int {
+	res := []int{0, 1}
+	return calcFib(5, &res)
+}
+
+func calcFib(n int, res *[]int) int {
 	if n == 0 {
-		return res[0]
+		return (*res)[0]
 	}
 	if n == 1 {
-		return res[1]
+		return (*res)[1]
 	}
-	if len(res) <= n {
-		res = append(res, fib(n-2)+fib(n-1))
+	if len(*res) <= n {
+		*res = append(*res, calcFib(n-2, res)+calcFib(n-1, res))
 	}
-	return res[n]
+	return (*res)[n]
 }

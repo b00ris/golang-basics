@@ -34,8 +34,10 @@ func main() {
 	intMeetInBoth := meetInBoth(arr, arr2)
 	fmt.Println("3) ", intMeetInBoth)
 	//4.Сделать Фибоначчи с мемоизацией
-	res := []int{0, 1}
-	print(calcFib(5, &res))
+	res := make(map[int]int, 5)
+	res[1] = 0
+	res[2] = 1
+	print(calcFib(10, res))
 	//	or
 	//print(fib(9))
 
@@ -84,20 +86,17 @@ func meetInBoth(first []int, second []int) []int {
 	return res
 }
 
-func fib(n int) int {
-	res := []int{0, 1}
-	return calcFib(5, &res)
-}
+//func fib(n int) int {
+//	res := []int{0, 1}
+//	return calcFib(5, res)
+//}
 
-func calcFib(n int, res *[]int) int {
-	if n == 0 {
-		return (*res)[0]
+func calcFib(n int, res map[int]int) int {
+	v, ok := res[n]
+	if ok {
+		return v
 	}
-	if n == 1 {
-		return (*res)[1]
-	}
-	if len(*res) <= n {
-		*res = append(*res, calcFib(n-2, res)+calcFib(n-1, res))
-	}
-	return (*res)[n]
+	res[n] = calcFib(n-2, res) + calcFib(n-1, res)
+
+	return res[n]
 }

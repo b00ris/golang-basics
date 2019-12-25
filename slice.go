@@ -5,7 +5,7 @@ import (
 	"sort"
 )
 
-func main2() {
+func main4() {
 	// 1. К каждому элементу []int прибавить 1
 	arr := []int{0, 1, 2, 3}
 	addOne(arr)

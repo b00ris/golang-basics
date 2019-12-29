@@ -6,12 +6,6 @@ import (
 	"testing"
 )
 
-const (
-	ASC = iota
-	DESC
-	MANY
-)
-
 func TestCalcOrder(t *testing.T) {
 	products := InitProducts()
 	users := InitUsers()
@@ -19,10 +13,13 @@ func TestCalcOrder(t *testing.T) {
 
 	market.CalcOrder(orders[1], users)
 
-	market.PrintUsers(DESC, users)
+	//jekamas: не нужно создавать такое же константы в тесте. если они будут меняться, то придется менять их в двух местах. так ты увеличишь объем работы на поддержке кода.
+	market.PrintUsers(market.DESC, users)
 
 	//t.Log(price)
 	//t.Log(users["Gates"])
+
+	// jekamas: нужно добавить проверку, что собственно мы ожидаем и получили ли мы ожидаемое
 }
 
 func BenchmarkCalcOrder(b *testing.B) {
@@ -32,6 +29,7 @@ func BenchmarkCalcOrder(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
+		//jekamas:  тут есть проблема. ты заодно будешь измерять производительность rand.Intn(100). лучше вне этого цикла и до вызова .ResetTimer() сделать массив случайных значений нужной длины и после его использовать, чтобы мы мерили только нужное.
 		market.CalcOrder(orders[rand.Intn(100)], users)
 	}
 }

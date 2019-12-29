@@ -5,8 +5,10 @@ import (
 	"sort"
 )
 
+type sortDirection int
+
 const (
-	ASC = iota
+	ASC sortDirection = iota
 	DESC
 	MANY
 )
@@ -38,48 +40,39 @@ func CalcOrder(order Order, users map[string]float32) float32 {
 }
 
 func CalcOrderWithSpeedCache(order Order, users map[string]float32, cache map[string]float32) float32 {
-
 	var total float32
 
+	// jekamas: кэширование лушче вынести в отдельную функцию
 	orderKey := ""
 	for _, v := range order.Products {
 		orderKey += v.Name
 	}
-	v, okay := cache[orderKey]
-	if okay == true {
-		total = v
-	} else {
+
+	var ok bool
+	if total, ok = cache[orderKey]; !ok {
 		for _, product := range order.Products {
 			total += product.Price
 		}
 		cache[orderKey] = total
 	}
-	value, okay := users[order.User]
-	if okay == true && value >= total {
+
+	if value, ok := users[order.User]; ok && value >= total {
 		users[order.User] -= total
 	} else {
 		// fmt.Println(order.User, " не имеет требуемой суммы")
 	}
+
 	return total
 }
 
-func PrintUsers(typeSort int, users map[string]float32) {
-	switch typeSort {
+func PrintUsers(direction sortDirection, users map[string]float32) {
+	switch direction {
 	case ASC:
 		keys := make([]string, 0, len(users))
 		for k := range users {
 			keys = append(keys, k)
 		}
 		sort.Strings(keys)
-		for _, k := range keys {
-			fmt.Println(k, users[k])
-		}
-	case DESC:
-		keys := make([]string, 0, len(users))
-		for k := range users {
-			keys = append(keys, k)
-		}
-		sort.Sort(sort.Reverse(sort.StringSlice(keys)))
 		for _, k := range keys {
 			fmt.Println(k, users[k])
 		}
@@ -98,5 +91,4 @@ func PrintUsers(typeSort int, users map[string]float32) {
 			fmt.Println(v.key, v.value)
 		}
 	}
-
 }

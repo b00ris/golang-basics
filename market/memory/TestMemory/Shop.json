@@ -1,0 +1,1 @@
+{"Products":{"Cola":{"Name":"Cola","Price":5,"Status":0},"Pineapple":{"Name":"Pineapple","Price":500,"Status":0}},"Kits":{"Pinakalada":{"MainProduct":"Pineapple","AdditionalProduct":"Cola","Probe":"Cheesecake","Discount":0.5}},"Probes":["Cheesecake"],"Users":{"Kevin":{"Bill":747.5,"Status":0}},"Cache":{"\u0000Pinakalada":252.5}}

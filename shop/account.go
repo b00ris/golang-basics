@@ -8,21 +8,25 @@ import (
 
 type MyAccount shop_competition.Account
 
-func (shop Shop) Register(username string) error {
-	_, okay := shop.Accounts[username]
+func (accounts *Accounts) Register(username string) error {
+	_, okay := (*accounts)[username]
 	if okay {
 		return errors.New("user already registered")
 	}
-	shop.Accounts[username] = shop_competition.Account{}
+	(*accounts)[username] = shop_competition.Account{
+		Name:        username,
+		Balance:     0,
+		AccountType: shop_competition.AccountNormal,
+	}
 	return nil
 }
 
-func (shop Shop) NewAccount(username string, name string, balance float32, accountType shop_competition.AccountType) error {
-	err := shop.Register(username)
+func (accounts *Accounts) NewAccount(username string, name string, balance float32, accountType shop_competition.AccountType) error {
+	err := accounts.Register(username)
 	if err != nil {
 		return err
 	}
-	shop.Accounts[username] = shop_competition.Account{
+	(*accounts)[username] = shop_competition.Account{
 		Name:        name,
 		Balance:     balance,
 		AccountType: accountType,
@@ -30,48 +34,50 @@ func (shop Shop) NewAccount(username string, name string, balance float32, accou
 	return nil
 }
 
-func (shop Shop) AddBalance(username string, sum float32) error {
+func (accounts *Accounts) AddBalance(username string, sum float32) error {
 	if sum <= 0.0 {
-		return errors.New("sum very small")
+		return errors.New("sum only positive value")
 	}
-	user, okay := shop.Accounts[username]
+	user, okay := (*accounts)[username]
 	if okay {
 		return errors.New("user not found")
 	}
 	user.Balance += sum
-	shop.Accounts[username] = user
+	(*accounts)[username] = user
 
 	return nil
 }
 
-func (shop Shop) GetBalance(username string) (float32, error) {
-	user, okay := shop.Accounts[username]
+func (accounts *Accounts) GetBalance(username string) (float32, error) {
+	user, okay := (*accounts)[username]
 	if okay {
 		return 0, errors.New("user not found")
 	}
 	return user.Balance, nil
 }
 
-func (shop Shop) GetAccounts(sort shop_competition.AccountSortType) []shop_competition.Account {
-	accounts := make([]shop_competition.Account, 0, len(shop.Accounts))
+func (accounts *Accounts) GetAccounts(sort shop_competition.AccountSortType) []shop_competition.Account {
+	accountsRes := make([]shop_competition.Account, len(*accounts))
 
-	for _, v := range shop.Accounts {
-		accounts = append(accounts, v)
+	i := 0
+	for _, v := range *accounts {
+		accountsRes[i] = v
+		i++
 	}
 	switch sort {
 	case shop_competition.SortByName:
-		sorting.Slice(accounts, func(i, j int) bool {
-			return accounts[i].Name < accounts[j].Name
+		sorting.Slice(accountsRes, func(i, j int) bool {
+			return accountsRes[i].Name < accountsRes[j].Name
 		})
 	case shop_competition.SortByNameReverse:
-		sorting.Slice(accounts, func(i, j int) bool {
-			return accounts[i].Name > accounts[j].Name
+		sorting.Slice(accountsRes, func(i, j int) bool {
+			return accountsRes[i].Name > accountsRes[j].Name
 		})
 	case shop_competition.SortByBalance:
-		sorting.Slice(accounts, func(i, j int) bool {
-			return accounts[i].Balance < accounts[j].Balance
+		sorting.Slice(accountsRes, func(i, j int) bool {
+			return accountsRes[i].Balance > accountsRes[j].Balance
 		})
 	}
-	return accounts
+	return accountsRes
 
 }

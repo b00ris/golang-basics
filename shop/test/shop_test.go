@@ -12,3 +12,7 @@ func TestCalcOrder(t *testing.T) {
 	//total += medTotal - medTotal.Multiply(1.0/100.0) * medTotal.Multiply(50)
 	t.Log(total)
 }
+
+func TestName2(t *testing.T) {
+	t.Log(shop.ToMoney(1.927))
+}

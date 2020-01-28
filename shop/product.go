@@ -1,17 +1,60 @@
 package shop
 
-import "github.com/youricorocks/shop_competition"
+import (
+	"errors"
+	"fmt"
+	"github.com/youricorocks/shop_competition"
+)
 
-type MyProduct shop_competition.Product
+func (products *Products) AddProduct(product shop_competition.Product) error {
+	if len(product.Name) == 0 {
+		return errors.New("product without name")
+	}
+	if _, ok := (*products)[product.Name]; ok {
+		return errors.New("product exist")
+	}
 
-func (order MyOrder) AddProduct(shop_competition.Product) error {
-	panic("implement me")
+	err := productCheck(product)
+	if err != nil {
+		return err
+	}
+
+	(*products)[product.Name] = product
+
+	return nil
 }
 
-func (order MyOrder) ModifyProduct(shop_competition.Product) error {
-	panic("implement me")
+func (products *Products) ModifyProduct(product shop_competition.Product) error {
+	if _, ok := (*products)[product.Name]; !ok {
+		return errors.New("product not found")
+	}
+
+	err := productCheck(product)
+	if err != nil {
+		return err
+	}
+	(*products)[product.Name] = product
+
+	return nil
 }
 
-func (order MyOrder) RemoveProduct(name string) error {
-	panic("implement me")
+func (products *Products) RemoveProduct(name string) error {
+	if _, ok := (*products)[name]; !ok {
+		return errors.New("product not found")
+	}
+	delete(*products, name)
+	return nil
+}
+
+func productCheck(product shop_competition.Product) error {
+	if product.Type == shop_competition.ProductSample {
+		if product.Price != 0 {
+			return errors.New("sample was free in bundle")
+		}
+	} else {
+		if product.Price <= 0.0 {
+			return fmt.Errorf("product price %.2f not valid", product.Price)
+		}
+	}
+	return nil
 }

@@ -6,10 +6,7 @@ import (
 )
 
 func (shop Shop) Import(data []byte) error {
-	if err := json.Unmarshal(data, &shop); err != nil {
-		return err
-	}
-	return nil
+	return json.Unmarshal(data, &shop)
 }
 
 func (shop Shop) Export() ([]byte, error) {
@@ -21,6 +18,6 @@ func (shop Shop) Export() ([]byte, error) {
 	return reqBodyBytes.Bytes(), nil
 }
 
-func (shop Shop) WriteToFile(file string, data []byte) error {
-	return nil
-}
+//func (shop Shop) WriteToFile(file string, data []byte) error {
+//	return nil
+//}

@@ -1,15 +1,18 @@
 package shop
 
 import (
+	"encoding/json"
 	"errors"
 	"github.com/youricorocks/shop_competition"
-	"sort"
 )
 
-type MyOrder shop_competition.Order
+var cacheErr = struct {
+	ReCalc bool
+	err    error
+}{}
 
-//Подсчет суммы заказа без учета скидок и наценок
-func (shop Shop) CalculateOrder(order shop_competition.Order) (float32, error) {
+//Подсчет суммы заказа
+func (shop Shop) CalculateOrder(username string, order shop_competition.Order) (float32, error) {
 	if order.Products == nil &&
 		order.Bundles == nil {
 		return 0, errors.New("order items not init")
@@ -20,144 +23,75 @@ func (shop Shop) CalculateOrder(order shop_competition.Order) (float32, error) {
 	}
 
 	var total Money
-	for _, product := range order.Products {
-		total += ToMoney(product.Price)
-	}
 
-	for _, bundle := range order.Bundles {
-		var medTotal Money
-		for _, product := range bundle.Products {
-			medTotal += ToMoney(product.Price)
+	//If send accountType aka params this check not necessary
+	user, ok := shop.Accounts[username]
+	if !ok {
+		return 0, errors.New("user is not registered")
+	}
+	var cacheKey []byte
+	cacheKey, cacheErr.err = json.Marshal(order)
+	if cacheErr.err == nil {
+		totalCache, ok := shop.CacheProducts[string(cacheKey)]
+		if ok {
+			return totalCache.Float32(), nil
 		}
-		total += medTotal.Multiply(bundle.Discount)
+	} else {
+		cacheErr.ReCalc = true
+	}
+	//Products
+	for i := 0; i < len(order.Products); i++ {
+		product := order.Products[i]
+		if product.Type == shop_competition.ProductSample {
+			cacheErr.ReCalc = true
+			order.Products = append(order.Products[:i], order.Products[i+1:]...)
+			i--
+		}
+		total += ToMoney(product.Price).Multiply(getCoefficientByType(user.AccountType, product.Type))
 	}
 
+	//Bundles
+	for _, bundle := range order.Bundles {
+		merTotal := Money(0)
+		for _, product := range bundle.Products {
+			merTotal += ToMoney(product.Price).Multiply(getCoefficientByType(user.AccountType, product.Type))
+		}
+		total += merTotal.Multiply(bundle.Discount)
+	}
+
+	if cacheErr.ReCalc {
+		cacheKey, cacheErr.err = json.Marshal(order)
+	}
+	if cacheErr.err == nil {
+		shop.CacheProducts[string(cacheKey)] = total
+	}
 	if total <= ToMoney(0.0) {
 		return 0, errors.New("total cannot be negative: " + total.String())
 	}
 	return total.Float32(), nil
-
 }
 
 //Подсчет суммы заказа для клиента
 func (shop Shop) PlaceOrder(username string, order shop_competition.Order) error {
-	if order.Products == nil &&
-		order.Bundles == nil {
-		return errors.New("order items not init")
-	}
-	if len(order.Products) == 0 &&
-		len(order.Bundles) == 0 {
-		return errors.New("not purchases")
-	}
-
 	user, ok := shop.Accounts[username]
 	if !ok {
 		return errors.New("user is not registered")
 	}
 
-	total := Money(0)
-	//Products
-	if len(order.Products) != 0 {
-		totalProducts := Money(0)
-		cacheProducts := shop.getCacheProductsTotal(order, user.AccountType)
-		if cacheProducts.IsHas {
-			totalProducts = cacheProducts.Total
-		} else {
-			for _, product := range order.Products {
-				totalProducts += ToMoney(product.Price).Multiply(getCoefficientByType(user.AccountType, product.Type))
-			}
-			shop.CacheProducts[cacheProducts.Key] = totalProducts
-		}
-		total += totalProducts
+	total, err := shop.CalculateOrder(username, order)
+	if err != nil {
+		return err
 	}
-	//Bundles
-	if len(order.Bundles) != 0 {
-		totalBundles := Money(0)
-		//cacheBundles := shop.getCacheBundlesTotal(order, user.AccountType)
-		//if cacheBundles.IsHas{
-		//totalBundles = cacheBundles.Total
-		//} else {
-		for _, bundle := range order.Bundles {
-			merTotal := Money(0)
-			for _, product := range bundle.Products {
-				merTotal += ToMoney(product.Price).Multiply(getCoefficientByType(user.AccountType, product.Type))
-			}
-			totalBundles += merTotal.Multiply(bundle.Discount)
-		}
-		//shop.CacheBundles[cacheBundles.Key] = totalBundles
-		//}
-		total += totalBundles
-	}
-	if ToMoney(user.Balance) < total {
+
+	if ToMoney(user.Balance) < ToMoney(total) {
 		return errors.New("user has insufficient balance")
 	}
 
-	if total < ToMoney(0.0) {
-		return errors.New("total cannot be negative: " + total.String())
-	}
-	user.Balance -= total.Float32()
+	user.Balance -= total
 	shop.Accounts[username] = user
 	return nil
 }
 
-// Проверка наличия кэшированного значения суммы заказа для продуктов
-// Формат кэша: СтатусКлиентаНаименование1Наименование2...
-func (shop Shop) getCacheProductsTotal(order shop_competition.Order, accountType shop_competition.AccountType) CacheInfo {
-	// Сортируем продукты в правильный набор
-	sortProducts := make([]shop_competition.Product, len(order.Products))
-	copy(sortProducts, order.Products)
-	sort.Slice(sortProducts, func(i, j int) bool {
-		return sortProducts[i].Name < sortProducts[j].Name
-	})
-
-	orderKey := string(accountType)
-	for _, v := range sortProducts {
-		orderKey += v.Name
-	}
-	//for _, bundle := range order.Bundles{
-	//	orderKey += "{"
-	//	for _, product := range bundle.Products{
-	//		orderKey += product.Name
-	//	}
-	//	orderKey += "}"
-	//}
-
-	total, ok := shop.CacheProducts[orderKey]
-
-	return CacheInfo{
-		IsHas: ok,
-		Total: total,
-		Key:   orderKey,
-	}
-}
-
-// Проверка наличия кэшированного значения суммы заказа для продуктов
-// Формат кэша: СтатусКлиента{Наименование1Наименование2...}...
-//func (shop Shop) getCacheBundlesTotal(order shop_competition.Order, accountType shop_competition.AccountType) CacheInfo {
-// Сортируем продукты в правильный набор
-//sortProducts := make([]shop_competition.Bundle, len(order.Bundles))
-//copy(sortProducts, order.Products)
-//sort.Slice(sortProducts, func(i, j int) bool {
-//	return sortProducts[i].Name < sortProducts[j].Name
-//})
-//
-//orderKey := string(accountType)
-////for _, bundle := range order.Bundles{
-////	orderKey += "{"
-////	for _, product := range bundle.Products{
-////		orderKey += product.Name
-////	}
-////	orderKey += "}"
-////}
-//
-//total, ok := shop.CacheProducts[orderKey]
-
-//return CacheInfo{
-//	IsHas: ok,
-//	Total: total,
-//	Key:   orderKey,
-//}
-//}
 func getCoefficientByType(accountType shop_competition.AccountType, productType shop_competition.ProductType) float32 {
 	var coefficient float32 = 1.0
 	switch {

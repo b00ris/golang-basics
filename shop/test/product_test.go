@@ -130,6 +130,15 @@ var modifyProductTests = []ProductTest{
 		},
 		err: errors.New("product not found"),
 	},
+	{
+		shop: shopProductsInit(map[string]shop_competition.Product{}),
+		product: shop_competition.Product{
+			Name:  "Pineapple",
+			Price: 500,
+			Type:  shop_competition.ProductPremium,
+		},
+		err: errors.New("product not found"),
+	},
 }
 
 func TestModifyProduct(t *testing.T) {
@@ -163,6 +172,15 @@ var deleteProductTests = []ProductTest{
 			Type:  shop_competition.ProductPremium,
 		},
 		err: nil,
+	},
+	{
+		shop: shopProductsInit(map[string]shop_competition.Product{}),
+		product: shop_competition.Product{
+			Name:  "Pineapple",
+			Price: 500,
+			Type:  shop_competition.ProductPremium,
+		},
+		err: errors.New("product not found"),
 	},
 	{
 		shop: shopProductsInit(map[string]shop_competition.Product{}),

@@ -1,0 +1,50 @@
+run:
+  deadline: 10m
+
+linters:
+  enable:
+    - errcheck
+    - gofmt
+    - interfacer
+    - govet
+    - structcheck
+    - stylecheck
+    - unconvert
+    - unparam
+    - varcheck
+    - nakedret
+    - prealloc
+    - deadcode
+    - gosec
+    - ineffassign
+    - depguard
+    - typecheck
+    - megacheck
+    - dupl
+    - funlen
+    - goconst
+    - goimports
+    - gomnd
+    - scopelint
+    - unconvert
+    - wsl
+
+  disable-all: true
+
+linters-settings:
+  golint:
+    min-confidence: 0
+  goconst:
+    min-len: 2
+    min-occurrences: 2
+  gofmt:
+    auto-fix: false
+  govet:
+    check-shadowing: true
+  funlen:
+    lines: 120
+    statements: 40
+
+issues:
+  exclude:
+    - composites

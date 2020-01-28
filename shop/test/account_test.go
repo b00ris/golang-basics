@@ -7,7 +7,7 @@ import (
 )
 
 func TestSort(t *testing.T) {
-	shopTest := shop.ShopInit()
+	shopTest := shop.NewShop()
 	shopTest.Accounts = map[string]shop_competition.Account{
 		"Bred":   {Name: "Bred", Balance: 1000, AccountType: shop_competition.AccountNormal},
 		"Alfrad": {Name: "Alfrad", Balance: 900, AccountType: shop_competition.AccountNormal},

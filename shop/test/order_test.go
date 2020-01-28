@@ -18,7 +18,7 @@ type OrderTest struct {
 
 var calculateOrderTests = []OrderTest{
 	{
-		shop: shopAccountsInit(map[string]shop_competition.Account{
+		shop: NewShopAccounts(map[string]shop_competition.Account{
 			"BredFalcon": {Name: "Bred", Balance: 1000.0, AccountType: shop_competition.AccountNormal}}),
 		order: shop_competition.Order{
 			Products: []shop_competition.Product{
@@ -32,7 +32,7 @@ var calculateOrderTests = []OrderTest{
 		err:      nil,
 	}, // Products
 	{
-		shop: shopAccountsInit(map[string]shop_competition.Account{
+		shop: NewShopAccounts(map[string]shop_competition.Account{
 			"BredFalcon": {Name: "Bred", Balance: 1000.0, AccountType: shop_competition.AccountNormal}}),
 		order: shop_competition.Order{
 			Products: []shop_competition.Product{},
@@ -52,7 +52,7 @@ var calculateOrderTests = []OrderTest{
 		err:      nil,
 	}, // Bundles
 	{
-		shop: shopAccountsInit(map[string]shop_competition.Account{
+		shop: NewShopAccounts(map[string]shop_competition.Account{
 			"BredFalcon": {Name: "Bred", Balance: 1000.0, AccountType: shop_competition.AccountNormal}}),
 		order: shop_competition.Order{
 			Products: []shop_competition.Product{
@@ -74,7 +74,7 @@ var calculateOrderTests = []OrderTest{
 		err:      nil,
 	}, // Combination
 	{
-		shop: shopAccountsInit(map[string]shop_competition.Account{
+		shop: NewShopAccounts(map[string]shop_competition.Account{
 			"BredFalcon": {Name: "Bred", Balance: 1000.0, AccountType: shop_competition.AccountNormal}}),
 		order: shop_competition.Order{
 			Products: []shop_competition.Product{
@@ -88,7 +88,7 @@ var calculateOrderTests = []OrderTest{
 		err:      nil,
 	}, // PremiumItem
 	{
-		shop: shopAccountsInit(map[string]shop_competition.Account{
+		shop: NewShopAccounts(map[string]shop_competition.Account{
 			"BredFalcon": {Name: "Bred", Balance: 1000.0, AccountType: shop_competition.AccountNormal},
 			"KelvinKlay": {Name: "Kelvin", Balance: 1000.0, AccountType: shop_competition.AccountPremium}}),
 		order: shop_competition.Order{
@@ -112,7 +112,7 @@ var calculateOrderTests = []OrderTest{
 		err:      nil,
 	}, // PremiumUser
 	{
-		shop: shopAccountsInit(map[string]shop_competition.Account{
+		shop: NewShopAccounts(map[string]shop_competition.Account{
 			"BredFalcon": {Name: "Bred", Balance: 1000.0, AccountType: shop_competition.AccountNormal}}),
 		order: shop_competition.Order{
 			Products: []shop_competition.Product{
@@ -123,10 +123,10 @@ var calculateOrderTests = []OrderTest{
 		},
 		username: "BredFalcon",
 		result:   0,
-		err:      errors.New("total cannot be negative: -0.98"),
+		err:      errors.New("total cannot be negative: -1.00"),
 	},
 	{
-		shop: shop.ShopInit(),
+		shop: shop.NewShop(),
 		order: shop_competition.Order{
 			Products: nil,
 			Bundles:  nil,
@@ -135,7 +135,7 @@ var calculateOrderTests = []OrderTest{
 		err:    errors.New("order items not init"),
 	},
 	{
-		shop: shop.ShopInit(),
+		shop: shop.NewShop(),
 		order: shop_competition.Order{
 			Products: []shop_competition.Product{},
 			Bundles:  []shop_competition.Bundle{},
@@ -170,8 +170,10 @@ func TestCalculateOrder(t *testing.T) {
 // {CalculateOrderBlock}
 
 // {PlaceOrderBlock}
-func shopAccountsInit(accounts map[string]shop_competition.Account) *shop.Shop {
+func NewShopAccounts(accounts map[string]shop_competition.Account) *shop.Shop {
 	return &shop.Shop{
+		Products:      make(map[string]shop_competition.Product),
+		Bundles:       make(map[string]shop_competition.Bundle),
 		Accounts:      accounts,
 		CacheProducts: make(map[string]shop.Money),
 	}
@@ -179,7 +181,7 @@ func shopAccountsInit(accounts map[string]shop_competition.Account) *shop.Shop {
 
 var placeOrderTests = []OrderTest{
 	{
-		shop: shop.ShopInit(),
+		shop: shop.NewShop(),
 		order: shop_competition.Order{
 			Products: []shop_competition.Product{
 				{Name: "Pineapple", Price: 150.00, Type: shop_competition.ProductNormal},
@@ -192,7 +194,7 @@ var placeOrderTests = []OrderTest{
 		err:      errors.New("user is not registered"),
 	}, // UserNotFound
 	{
-		shop: shopAccountsInit(map[string]shop_competition.Account{
+		shop: NewShopAccounts(map[string]shop_competition.Account{
 			"BredFalcon": {Name: "Bred", Balance: 500.0, AccountType: shop_competition.AccountNormal}}),
 		order: shop_competition.Order{
 			Products: []shop_competition.Product{
@@ -208,7 +210,7 @@ var placeOrderTests = []OrderTest{
 		err:      errors.New("user has insufficient balance"),
 	}, // BalanceInfluence
 	{
-		shop: shopAccountsInit(map[string]shop_competition.Account{
+		shop: NewShopAccounts(map[string]shop_competition.Account{
 			"BredFalcon": {Name: "Bred", Balance: 1000.0, AccountType: shop_competition.AccountNormal}}),
 		order: shop_competition.Order{
 			Products: []shop_competition.Product{
@@ -219,7 +221,7 @@ var placeOrderTests = []OrderTest{
 		},
 		username: "BredFalcon",
 		result:   0,
-		err:      errors.New("total cannot be negative: -0.98"),
+		err:      errors.New("total cannot be negative: -1.00"),
 	}, // NegativeTotal
 }
 

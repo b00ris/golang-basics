@@ -13,11 +13,11 @@ type bundleTest struct {
 	main     shop_competition.Product
 	discount float32
 	adds     []shop_competition.Product
-	bundle   shop_competition.Bundle
-	err      error
+	//bundle   shop_competition.Bundle
+	err error
 }
 
-func shopBundlesInit(bundles map[string]shop_competition.Bundle) *shop.Shop {
+func NewShopBundles(bundles map[string]shop_competition.Bundle) *shop.Shop {
 	return &shop.Shop{
 		Bundles: bundles,
 	}
@@ -25,7 +25,7 @@ func shopBundlesInit(bundles map[string]shop_competition.Bundle) *shop.Shop {
 
 var addBundleTests = []bundleTest{
 	{
-		shop: shopBundlesInit(map[string]shop_competition.Bundle{}),
+		shop: NewShopBundles(map[string]shop_competition.Bundle{}),
 		name: "KingBundle",
 		main: shop_competition.Product{
 			Name:  "Burger King",
@@ -43,7 +43,7 @@ var addBundleTests = []bundleTest{
 		err: nil,
 	},
 	{
-		shop: shopBundlesInit(map[string]shop_competition.Bundle{}),
+		shop: NewShopBundles(map[string]shop_competition.Bundle{}),
 		name: "KingBundle",
 		main: shop_competition.Product{
 			Name:  "Burger King",
@@ -61,7 +61,7 @@ var addBundleTests = []bundleTest{
 		err: nil,
 	},
 	{
-		shop: shopBundlesInit(map[string]shop_competition.Bundle{}),
+		shop: NewShopBundles(map[string]shop_competition.Bundle{}),
 		name: "KingBundle",
 		main: shop_competition.Product{
 			Name:  "Burger King",
@@ -79,7 +79,7 @@ var addBundleTests = []bundleTest{
 		err: errors.New("sample don`t has price"),
 	},
 	{
-		shop: shopBundlesInit(map[string]shop_competition.Bundle{}),
+		shop: NewShopBundles(map[string]shop_competition.Bundle{}),
 		name: "KingBundle",
 		main: shop_competition.Product{
 			Name:  "Burger King",
@@ -97,7 +97,7 @@ var addBundleTests = []bundleTest{
 		err: errors.New("discount not correct"),
 	},
 	{
-		shop: shopBundlesInit(map[string]shop_competition.Bundle{}),
+		shop: NewShopBundles(map[string]shop_competition.Bundle{}),
 		name: "KingBundle",
 		main: shop_competition.Product{
 			Name:  "Burger King",

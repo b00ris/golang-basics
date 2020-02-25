@@ -24,7 +24,6 @@ linters:
     - funlen
     - goconst
     - goimports
-    - gomnd
     - scopelint
     - unconvert
     - wsl

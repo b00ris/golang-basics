@@ -108,22 +108,36 @@ func (accounts *Accounts) AddBalance(username string, sum float32) error {
 }
 
 func (accounts *Accounts) GetBalanceConc(name string) (float32, error) {
-	res, ch := make(chan float32, 1), make(chan error, 1)
+	type BalanceRes struct {
+		Res float32
+		Err error
+	}
+	ch := make(chan BalanceRes, 1)
 	go func() {
 		balance, err := accounts.GetBalance(name)
-		ch <- err
-		res <- balance
+		ch <- BalanceRes{
+			Res: balance,
+			Err: err,
+		}
 	}()
 	select {
-	case err := <-ch:
-		balance := <-res
-		return balance, err
+	case res := <-ch:
+		return res.Res, res.Err
 	case <-time.After(DURATION):
 		return 0, TimeoutError
 	}
 }
 
 func (accounts *Accounts) GetBalance(username string) (float32, error) {
+	accounts.RLock()
+	defer accounts.RUnlock()
+	user, okay := accounts.Accounts[username]
+	if okay {
+		return 0, errors.New("user not found")
+	}
+	return user.Balance, nil
+}
+func (accounts *Accounts) Balance(username string) (float32, error) {
 	accounts.RLock()
 	defer accounts.RUnlock()
 	user, okay := accounts.Accounts[username]

@@ -1,7 +1,6 @@
-package test
+package shop
 
 import (
-	"lessons/basics/shop"
 	"testing"
 )
 
@@ -21,7 +20,7 @@ var toMoneyTests = []moneyTest{
 
 func TestToMoney(t *testing.T) {
 	for i, v := range toMoneyTests {
-		res := shop.ToMoney(v.num)
+		res := ToMoney(v.num)
 		if res.Float32() != v.res {
 			t.Fatal(i, ". Nums not equal:", res, " != ", v.res)
 		}
@@ -38,7 +37,7 @@ var multiplyTests = []moneyTest{
 
 func TestMultiply(t *testing.T) {
 	for i, v := range multiplyTests {
-		res := shop.ToMoney(v.num)
+		res := ToMoney(v.num)
 		res = res.Multiply(v.coefficient)
 		if res.Float32() != v.res {
 			t.Fatal(i, ". Nums not equal:", res, " != ", v.res)

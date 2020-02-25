@@ -2,9 +2,13 @@ package shop
 
 import (
 	"bytes"
+
 	"encoding/json"
 	"errors"
 	"github.com/youricorocks/shop_competition"
+
+	"sync"
+	"time"
 )
 
 type Shop struct {
@@ -12,13 +16,14 @@ type Shop struct {
 	Bundles
 	Accounts
 	CacheProducts map[string]Money
+	sync.RWMutex
 }
 
 func NewShop() *Shop {
 	return &Shop{
-		Products:      make(map[string]shop_competition.Product),
-		Bundles:       make(map[string]shop_competition.Bundle),
-		Accounts:      make(map[string]shop_competition.Account),
+		Products:      Products{Products: make(map[string]shop_competition.Product)},
+		Bundles:       Bundles{Bundles: make(map[string]shop_competition.Bundle)},
+		Accounts:      Accounts{Accounts: make(map[string]shop_competition.Account)},
 		CacheProducts: make(map[string]Money),
 	}
 }
@@ -37,7 +42,7 @@ func (shop Shop) CalculateOrder(username string, order shop_competition.Order) (
 	var total Money
 
 	//If send accountType aka params this check not necessary
-	user, ok := shop.Accounts[username]
+	user, ok := shop.Accounts.Accounts[username]
 	if !ok {
 		return 0, errors.New("user is not registered")
 	}
@@ -79,7 +84,9 @@ func (shop Shop) CalculateOrder(username string, order shop_competition.Order) (
 		cacheKey, cacheErr.err = json.Marshal(order)
 	}
 	if cacheErr.err == nil {
+		shop.Lock()
 		shop.CacheProducts[string(cacheKey)] = total
+		shop.Unlock()
 	}
 	if total <= ToMoney(0) {
 		return 0, errors.New("total cannot be negative: " + total.String())
@@ -87,9 +94,22 @@ func (shop Shop) CalculateOrder(username string, order shop_competition.Order) (
 	return total.Float32(), nil
 }
 
+func (shop Shop) PlaceOrderConc(username string, order shop_competition.Order) error {
+	ch := make(chan error, 1)
+	go func() {
+		ch <- shop.PlaceOrder(username, order)
+	}()
+	select {
+	case err := <-ch:
+		return err
+	case <-time.After(DURATION):
+		return TimeoutError
+	}
+}
+
 //Подсчет суммы заказа для клиента
 func (shop Shop) PlaceOrder(username string, order shop_competition.Order) error {
-	user, ok := shop.Accounts[username]
+	user, ok := shop.Accounts.Accounts[username]
 	if !ok {
 		return errors.New("user is not registered")
 	}
@@ -104,7 +124,11 @@ func (shop Shop) PlaceOrder(username string, order shop_competition.Order) error
 	}
 
 	user.Balance -= total
-	shop.Accounts[username] = user
+	shop.Accounts.Lock()
+	defer shop.Accounts.Unlock()
+
+	shop.Accounts.Accounts[username] = user
+
 	return nil
 }
 
@@ -133,3 +157,10 @@ func (shop Shop) Export() ([]byte, error) {
 
 	return reqBodyBytes.Bytes(), nil
 }
+
+const PACKAGE_SIZE = 1000
+const (
+	ImportNone = iota
+	ImportProcessing
+	ImportEof
+)

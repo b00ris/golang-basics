@@ -1,15 +1,15 @@
-package test
+package shop
 
 import (
 	"errors"
 	"github.com/youricorocks/shop_competition"
-	"lessons/basics/shop"
+	"sync"
 	"testing"
 )
 
 // {CalculateOrderBlock}
 type OrderTest struct {
-	shop     *shop.Shop
+	shop     *Shop
 	order    shop_competition.Order
 	username string
 	result   float32
@@ -126,7 +126,7 @@ var calculateOrderTests = []OrderTest{
 		err:      errors.New("total cannot be negative: -1.00"),
 	},
 	{
-		shop: shop.NewShop(),
+		shop: NewShop(),
 		order: shop_competition.Order{
 			Products: nil,
 			Bundles:  nil,
@@ -135,7 +135,7 @@ var calculateOrderTests = []OrderTest{
 		err:    errors.New("order items not init"),
 	},
 	{
-		shop: shop.NewShop(),
+		shop: NewShop(),
 		order: shop_competition.Order{
 			Products: []shop_competition.Product{},
 			Bundles:  []shop_competition.Bundle{},
@@ -170,18 +170,24 @@ func TestCalculateOrder(t *testing.T) {
 // {CalculateOrderBlock}
 
 // {PlaceOrderBlock}
-func NewShopAccounts(accounts map[string]shop_competition.Account) *shop.Shop {
-	return &shop.Shop{
-		Products:      make(map[string]shop_competition.Product),
-		Bundles:       make(map[string]shop_competition.Bundle),
-		Accounts:      accounts,
-		CacheProducts: make(map[string]shop.Money),
+func NewShopAccounts(accounts map[string]shop_competition.Account) *Shop {
+	return &Shop{
+		Products: Products{Products: make(map[string]shop_competition.Product)},
+		Bundles: Bundles{
+			Bundles: make(map[string]shop_competition.Bundle),
+			RWMutex: sync.RWMutex{},
+		},
+		Accounts: Accounts{
+			Accounts: accounts,
+			RWMutex:  sync.RWMutex{},
+		},
+		CacheProducts: make(map[string]Money),
 	}
 }
 
 var placeOrderTests = []OrderTest{
 	{
-		shop: shop.NewShop(),
+		shop: NewShop(),
 		order: shop_competition.Order{
 			Products: []shop_competition.Product{
 				{Name: "Pineapple", Price: 150.00, Type: shop_competition.ProductNormal},
@@ -229,7 +235,7 @@ func TestPlaceOrder(t *testing.T) {
 	for i, v := range placeOrderTests {
 		err := v.shop.PlaceOrder(v.username, v.order)
 
-		user := v.shop.Accounts[v.username]
+		user := v.shop.Accounts.Accounts[v.username]
 		if v.err == nil {
 			if err != nil {
 				t.Fatal(i, ". ", err)
@@ -251,18 +257,18 @@ func TestPlaceOrder(t *testing.T) {
 func TestCache(t *testing.T) {
 	testPlace := calculateOrderTests[2]
 
-	userBalance := testPlace.shop.Accounts[testPlace.username].Balance
+	userBalance := testPlace.shop.Accounts.Accounts[testPlace.username].Balance
 	err := testPlace.shop.PlaceOrder(testPlace.username, testPlace.order)
 	if err != nil {
 		t.Fatal(err)
 	}
-	dif := userBalance - testPlace.shop.Accounts[testPlace.username].Balance
-	userBalance = testPlace.shop.Accounts[testPlace.username].Balance
+	dif := userBalance - testPlace.shop.Accounts.Accounts[testPlace.username].Balance
+	userBalance = testPlace.shop.Accounts.Accounts[testPlace.username].Balance
 	err = testPlace.shop.PlaceOrder(testPlace.username, testPlace.order)
 	if err != nil {
 		t.Fatal(err)
 	}
-	difCache := userBalance - testPlace.shop.Accounts[testPlace.username].Balance
+	difCache := userBalance - testPlace.shop.Accounts.Accounts[testPlace.username].Balance
 	if dif != difCache {
 		t.Fatal("Cache has a different meaning")
 	}

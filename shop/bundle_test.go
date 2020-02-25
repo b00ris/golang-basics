@@ -1,14 +1,14 @@
-package test
+package shop
 
 import (
 	"errors"
 	"github.com/youricorocks/shop_competition"
-	"lessons/basics/shop"
+	"sync"
 	"testing"
 )
 
 type bundleTest struct {
-	shop     *shop.Shop
+	shop     *Shop
 	name     string
 	main     shop_competition.Product
 	discount float32
@@ -17,9 +17,12 @@ type bundleTest struct {
 	err error
 }
 
-func NewShopBundles(bundles map[string]shop_competition.Bundle) *shop.Shop {
-	return &shop.Shop{
-		Bundles: bundles,
+func NewShopBundles(bundles map[string]shop_competition.Bundle) *Shop {
+	return &Shop{
+		Bundles: Bundles{
+			Bundles: bundles,
+			RWMutex: sync.RWMutex{},
+		},
 	}
 }
 
@@ -129,7 +132,7 @@ func TestAddBundle(t *testing.T) {
 				t.Fatal(i, ". ", err)
 			}
 
-			if _, ok := test.shop.Bundles[test.name]; !ok {
+			if _, ok := test.shop.Bundles.Bundles[test.name]; !ok {
 				t.Fatal(i, ". Product not added")
 			}
 		} else {

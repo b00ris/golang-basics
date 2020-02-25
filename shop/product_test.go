@@ -1,33 +1,32 @@
-package test
+package shop
 
 import (
 	"errors"
 	"github.com/youricorocks/shop_competition"
-	"lessons/basics/shop"
 	"reflect"
 	"testing"
 )
 
 type ProductTest struct {
-	shop    *shop.Shop
+	shop    *Shop
 	product shop_competition.Product
 	err     error
 }
 
-func shopProductsInit(products map[string]shop_competition.Product) *shop.Shop {
-	return &shop.Shop{
-		Products: products,
+func NewShopProducts(products map[string]shop_competition.Product) *Shop {
+	return &Shop{
+		Products: Products{Products: products},
 	}
 }
 
 var addProductTests = []ProductTest{
 	{
-		shop:    shopProductsInit(map[string]shop_competition.Product{}),
+		shop:    NewShopProducts(map[string]shop_competition.Product{}),
 		product: shop_competition.Product{Name: "Pineapple", Price: 1000, Type: shop_competition.ProductNormal},
 		err:     nil,
 	},
 	{
-		shop: shopProductsInit(map[string]shop_competition.Product{}),
+		shop: NewShopProducts(map[string]shop_competition.Product{}),
 		product: shop_competition.Product{
 			Name:  "Pineapple",
 			Price: 1000,
@@ -36,12 +35,12 @@ var addProductTests = []ProductTest{
 		err: nil,
 	},
 	{
-		shop:    shopProductsInit(map[string]shop_competition.Product{}),
+		shop:    NewShopProducts(map[string]shop_competition.Product{}),
 		product: shop_competition.Product{Name: "", Price: 1000, Type: shop_competition.ProductNormal},
 		err:     errors.New("product without name"),
 	},
 	{
-		shop: shopProductsInit(map[string]shop_competition.Product{
+		shop: NewShopProducts(map[string]shop_competition.Product{
 			"Pineapple": {Name: "Pineapple", Price: 1000, Type: shop_competition.ProductNormal},
 		}),
 		product: shop_competition.Product{
@@ -52,7 +51,7 @@ var addProductTests = []ProductTest{
 		err: errors.New("product exist"),
 	},
 	{
-		shop: shopProductsInit(map[string]shop_competition.Product{}),
+		shop: NewShopProducts(map[string]shop_competition.Product{}),
 		product: shop_competition.Product{
 			Name:  "Pineapple",
 			Price: -1,
@@ -61,7 +60,7 @@ var addProductTests = []ProductTest{
 		err: errors.New("product price -1.00 not valid"),
 	},
 	{
-		shop: shopProductsInit(map[string]shop_competition.Product{}),
+		shop: NewShopProducts(map[string]shop_competition.Product{}),
 		product: shop_competition.Product{
 			Name:  "Pineapple",
 			Price: 0,
@@ -70,7 +69,7 @@ var addProductTests = []ProductTest{
 		err: errors.New("product price 0.00 not valid"),
 	},
 	{
-		shop: shopProductsInit(map[string]shop_competition.Product{}),
+		shop: NewShopProducts(map[string]shop_competition.Product{}),
 		product: shop_competition.Product{
 			Name:  "Pineapple",
 			Price: 0,
@@ -79,7 +78,7 @@ var addProductTests = []ProductTest{
 		err: nil,
 	},
 	{
-		shop: shopProductsInit(map[string]shop_competition.Product{}),
+		shop: NewShopProducts(map[string]shop_competition.Product{}),
 		product: shop_competition.Product{
 			Name:  "Pineapple",
 			Price: 111,
@@ -91,13 +90,14 @@ var addProductTests = []ProductTest{
 
 func TestAddProduct(t *testing.T) {
 	for i, test := range addProductTests {
-		err := test.shop.Products.AddProduct(test.product)
+		var err error
+		test.shop.Products.AddProduct(test.product)
 		if test.err == nil {
 			if err != nil {
 				t.Fatal(i, ". ", err)
 			}
 
-			if _, ok := test.shop.Products[test.product.Name]; !ok {
+			if _, ok := test.shop.Products.Products[test.product.Name]; !ok {
 				t.Fatal(i, ". Product not added")
 			}
 		} else {
@@ -111,7 +111,7 @@ func TestAddProduct(t *testing.T) {
 
 var modifyProductTests = []ProductTest{
 	{
-		shop: shopProductsInit(map[string]shop_competition.Product{
+		shop: NewShopProducts(map[string]shop_competition.Product{
 			"Pineapple": {Name: "Pineapple", Price: 1000, Type: shop_competition.ProductNormal},
 		}),
 		product: shop_competition.Product{
@@ -122,7 +122,7 @@ var modifyProductTests = []ProductTest{
 		err: nil,
 	},
 	{
-		shop: shopProductsInit(map[string]shop_competition.Product{}),
+		shop: NewShopProducts(map[string]shop_competition.Product{}),
 		product: shop_competition.Product{
 			Name:  "Pineapple",
 			Price: 500,
@@ -131,7 +131,7 @@ var modifyProductTests = []ProductTest{
 		err: errors.New("product not found"),
 	},
 	{
-		shop: shopProductsInit(map[string]shop_competition.Product{}),
+		shop: NewShopProducts(map[string]shop_competition.Product{}),
 		product: shop_competition.Product{
 			Name:  "Pineapple",
 			Price: 500,
@@ -149,7 +149,7 @@ func TestModifyProduct(t *testing.T) {
 				t.Fatal(i, ". ", err)
 			}
 
-			if product, ok := test.shop.Products[test.product.Name]; !ok || !reflect.DeepEqual(test.product, product) {
+			if product, ok := test.shop.Products.Products[test.product.Name]; !ok || !reflect.DeepEqual(test.product, product) {
 				t.Fatal(i, ". Product not modified")
 			}
 		} else {
@@ -163,7 +163,7 @@ func TestModifyProduct(t *testing.T) {
 
 var deleteProductTests = []ProductTest{
 	{
-		shop: shopProductsInit(map[string]shop_competition.Product{
+		shop: NewShopProducts(map[string]shop_competition.Product{
 			"Pineapple": {Name: "Pineapple", Price: 1000, Type: shop_competition.ProductNormal},
 		}),
 		product: shop_competition.Product{
@@ -174,7 +174,7 @@ var deleteProductTests = []ProductTest{
 		err: nil,
 	},
 	{
-		shop: shopProductsInit(map[string]shop_competition.Product{}),
+		shop: NewShopProducts(map[string]shop_competition.Product{}),
 		product: shop_competition.Product{
 			Name:  "Pineapple",
 			Price: 500,
@@ -183,7 +183,7 @@ var deleteProductTests = []ProductTest{
 		err: errors.New("product not found"),
 	},
 	{
-		shop: shopProductsInit(map[string]shop_competition.Product{}),
+		shop: NewShopProducts(map[string]shop_competition.Product{}),
 		product: shop_competition.Product{
 			Name:  "Pineapple",
 			Price: 500,
@@ -201,7 +201,7 @@ func TestDeleteProduct(t *testing.T) {
 				t.Fatal(i, ". ", err)
 			}
 
-			if _, ok := test.shop.Products[test.product.Name]; ok {
+			if _, ok := test.shop.Products.Products[test.product.Name]; ok {
 				t.Fatal(i, ". Product not deleted")
 			}
 		} else {
